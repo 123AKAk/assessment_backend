@@ -14,12 +14,16 @@ const seedUsers = async () => {
       email: 'admin@example.com',
       password: await bcrypt.hash('password', 10),
       role: 'Admin',
+      image: 'https://example.com/john.jpg',
+      status: 'active',
     },
     {
       name: 'John Doe',
       email: 'john@example.com',
       password: await bcrypt.hash('password', 10),
       role: 'User',
+      image: 'https://example.com/john.jpg',
+      status: 'inactive',
     }
   ]);
   console.log('Users seeded');

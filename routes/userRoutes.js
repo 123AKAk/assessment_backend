@@ -8,6 +8,6 @@ router.get('/', getUsers);
 router.post('/', adminOnly, createUser);
 router.put('/:id', adminOnly, updateUser);
 router.delete('/:id', adminOnly, deleteUser);
-router.get('/stats', authenticate, getUserStats);
+router.get('/stats', getUserStats);
 
 module.exports = router;

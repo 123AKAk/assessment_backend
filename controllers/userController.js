@@ -54,3 +54,26 @@ exports.deleteUser = async (req, res) => {
 
     res.json({ message: 'User deleted' });
 };
+
+
+exports.getUserStats = async (req, res) => {
+    try {
+      const [total, totalAdmins, totalUsers, totalInactive] = await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ role: 'Admin' }),
+        User.countDocuments({ role: 'User' }),
+        User.countDocuments({ status: 'inactive' })
+      ]);
+  
+      res.json({
+        totalUsers: total,
+        totalAdmins,
+        totalRegularUsers: totalUsers,
+        totalInactiveUsers: totalInactive
+      });
+    } catch (err) {
+      console.error('Error fetching user stats:', err);
+      res.status(500).json({ message: 'Failed to fetch user statistics' });
+    }
+  };
+  

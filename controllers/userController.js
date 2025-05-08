@@ -44,22 +44,17 @@ exports.updateUser = async (req, res) => {
     try {
         const { password, ...otherUpdates } = req.body;
 
-        // Find user
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Update fields
         Object.assign(user, otherUpdates);
 
-        // Hash new password if provided
-        if (password) {
+        if (typeof password === 'string' && password.trim() !== '') {
             user.password = await bcrypt.hash(password, 10);
         }
 
-        // Save updated user
         await user.save();
 
-        // Exclude password from response
         const { password: _, ...userWithoutPassword } = user.toObject();
         res.json(userWithoutPassword);
     } catch (err) {

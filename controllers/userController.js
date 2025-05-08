@@ -41,11 +41,31 @@ exports.createUser = async (req, res) => {
 };
 
 exports.updateUser = async (req, res) => {
-    const updates = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    try {
+        const { password, ...otherUpdates } = req.body;
 
-    res.json(user);
+        // Find user
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Update fields
+        Object.assign(user, otherUpdates);
+
+        // Hash new password if provided
+        if (password) {
+            user.password = await bcrypt.hash(password, 10);
+        }
+
+        // Save updated user
+        await user.save();
+
+        // Exclude password from response
+        const { password: _, ...userWithoutPassword } = user.toObject();
+        res.json(userWithoutPassword);
+    } catch (err) {
+        console.error('Error updating user:', err);
+        res.status(500).json({ message: 'Error updating user' });
+    }
 };
 
 exports.deleteUser = async (req, res) => {
@@ -58,22 +78,21 @@ exports.deleteUser = async (req, res) => {
 
 exports.getUserStats = async (req, res) => {
     try {
-      const [total, totalAdmins, totalUsers, totalInactive] = await Promise.all([
-        User.countDocuments(),
-        User.countDocuments({ role: 'Admin' }),
-        User.countDocuments({ role: 'User' }),
-        User.countDocuments({ status: 'inactive' })
-      ]);
-  
-      res.json({
-        totalUsers: total,
-        totalAdmins,
-        totalRegularUsers: totalUsers,
-        totalInactiveUsers: totalInactive
-      });
+        const [total, totalAdmins, totalUsers, totalInactive] = await Promise.all([
+            User.countDocuments(),
+            User.countDocuments({ role: 'Admin' }),
+            User.countDocuments({ role: 'User' }),
+            User.countDocuments({ status: 'inactive' })
+        ]);
+
+        res.json({
+            totalUsers: total,
+            totalAdmins,
+            totalRegularUsers: totalUsers,
+            totalInactiveUsers: totalInactive
+        });
     } catch (err) {
-      console.error('Error fetching user stats:', err);
-      res.status(500).json({ message: 'Failed to fetch user statistics' });
+        console.error('Error fetching user stats:', err);
+        res.status(500).json({ message: 'Failed to fetch user statistics' });
     }
-  };
-  
+};
